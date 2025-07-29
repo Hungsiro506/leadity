@@ -78,6 +78,16 @@ install_dependencies() {
         log_info "git is already installed"
     fi
     
+    # Install cron for SSL auto-renewal
+    if ! command -v crontab >/dev/null 2>&1; then
+        log_info "Installing cron for SSL certificate auto-renewal..."
+        sudo $PKG_MGR install -y --allowerasing --skip-broken cronie
+        sudo systemctl enable crond
+        sudo systemctl start crond
+    else
+        log_info "cron is already installed"
+    fi
+    
     # Install Docker with multiple fallback methods
     if command -v docker >/dev/null 2>&1; then
         log_info "Docker is already installed"
@@ -264,6 +274,13 @@ setup_ssl() {
 setup_ssl_renewal() {
     log_info "Setting up SSL certificate auto-renewal..."
     
+    # Check if crontab is available
+    if ! command -v crontab >/dev/null 2>&1; then
+        log_warning "crontab not available, skipping auto-renewal setup"
+        log_info "You can manually renew SSL certificates with: sudo certbot renew"
+        return 0
+    fi
+    
     # Create renewal script
     cat > ssl-renew.sh << 'EOF'
 #!/bin/bash
@@ -278,10 +295,17 @@ EOF
     
     chmod +x ssl-renew.sh
     
-    # Add to crontab (runs twice daily)
-    (crontab -l 2>/dev/null; echo "0 */12 * * * /home/$USER/leadity/ssl-renew.sh") | crontab -
+    # Ensure cron service is running
+    sudo systemctl enable crond 2>/dev/null || sudo systemctl enable cron 2>/dev/null || true
+    sudo systemctl start crond 2>/dev/null || sudo systemctl start cron 2>/dev/null || true
     
-    log_success "SSL auto-renewal configured"
+    # Add to crontab (runs twice daily)
+    if (crontab -l 2>/dev/null; echo "0 */12 * * * /home/$USER/leadity/ssl-renew.sh") | crontab -; then
+        log_success "SSL auto-renewal configured (runs twice daily)"
+    else
+        log_warning "Failed to setup auto-renewal. SSL certificates will need manual renewal."
+        log_info "Manual renewal command: sudo certbot renew"
+    fi
 }
 
 # Deploy application
