@@ -74,19 +74,19 @@ export default function EarlyPaymentStep({
       newErrors.bankName = 'Vui lòng chọn ngân hàng'
     }
 
-    if (!data.originalAmount || data.originalAmount <= 0) {
+    if (!data.originalAmount || parseNumberInput(data.originalAmount) <= 0) {
       newErrors.originalAmount = 'Vui lòng nhập số tiền vay ban đầu'
     }
 
-    if (!data.originalTerm || data.originalTerm <= 0) {
+    if (!data.originalTerm || parseNumberInput(data.originalTerm) <= 0) {
       newErrors.originalTerm = 'Vui lòng nhập kỳ hạn vay ban đầu'
     }
 
-    if (!data.originalRate || data.originalRate <= 0) {
+    if (!data.originalRate || parseNumberInput(data.originalRate) <= 0) {
       newErrors.originalRate = 'Vui lòng nhập lãi suất ban đầu'
     }
 
-    if (!data.monthlyPayment || data.monthlyPayment <= 0) {
+    if (!data.monthlyPayment || parseNumberInput(data.monthlyPayment) <= 0) {
       newErrors.monthlyPayment = 'Vui lòng nhập số tiền trả hàng tháng hiện tại'
     }
 
@@ -98,14 +98,14 @@ export default function EarlyPaymentStep({
     e.preventDefault()
     if (validateForm()) {
       // Calculate early repayment penalty
-      const penalty = data.originalAmount ? calculateEarlyRepaymentPenalty(data.originalAmount) : 0
+      const penalty = data.originalAmount ? calculateEarlyRepaymentPenalty(parseNumberInput(data.originalAmount)) : 0
       onDataChange({ ...data, earlyRepaymentPenalty: penalty })
       onNext()
     }
   }
 
   // Calculate penalty in real-time
-  const penalty = data.originalAmount ? calculateEarlyRepaymentPenalty(data.originalAmount) : 0
+  const penalty = data.originalAmount ? calculateEarlyRepaymentPenalty(parseNumberInput(data.originalAmount)) : 0
 
   return (
     <div className="card max-w-2xl mx-auto">
@@ -247,7 +247,7 @@ export default function EarlyPaymentStep({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-yellow-800">Số dư nợ gốc:</span>
-                <span className="font-medium text-yellow-900">{formatVND(data.originalAmount)}</span>
+                <span className="font-medium text-yellow-900">{formatVND(parseNumberInput(data.originalAmount))}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-yellow-800">Phí trả nợ trước hạn (2%):</span>
@@ -255,7 +255,7 @@ export default function EarlyPaymentStep({
               </div>
               <div className="border-t border-yellow-300 pt-2 flex justify-between">
                 <span className="text-yellow-800 font-medium">Tổng tiền cần trả:</span>
-                <span className="font-bold text-yellow-900">{formatVND(data.originalAmount + penalty)}</span>
+                <span className="font-bold text-yellow-900">{formatVND(parseNumberInput(data.originalAmount) + penalty)}</span>
               </div>
             </div>
             <p className="text-xs text-yellow-700 mt-2">

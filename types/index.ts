@@ -11,6 +11,7 @@ export interface EarlyPaymentData {
   originalTerm: string
   originalRate: string
   monthlyPayment: string
+  earlyRepaymentPenalty?: number
 }
 
 export interface ContactData {

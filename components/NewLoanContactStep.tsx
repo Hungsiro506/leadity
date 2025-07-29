@@ -70,9 +70,9 @@ export default function NewLoanContactStep({ data, onDataChange, onNext, onBack 
       newErrors.email = 'Email không đúng định dạng'
     }
 
-    if (!data.monthlyIncome || data.monthlyIncome <= 0) {
+    if (!data.monthlyIncome || parseNumberInput(data.monthlyIncome) <= 0) {
       newErrors.monthlyIncome = 'Vui lòng nhập thu nhập hàng tháng'
-    } else if (data.monthlyIncome < 5000000) {
+    } else if (parseNumberInput(data.monthlyIncome) < 5000000) {
       newErrors.monthlyIncome = 'Thu nhập tối thiểu 5,000,000 VND'
     }
 

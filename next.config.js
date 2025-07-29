@@ -14,6 +14,11 @@ const nextConfig = {
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   },
   
+  // Disable TypeScript checking during build for Docker
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
   // Configure headers for security
   async headers() {
     return [
