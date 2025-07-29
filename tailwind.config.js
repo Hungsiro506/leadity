@@ -35,7 +35,21 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: [
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          '"Fira Sans"',
+          '"Droid Sans"',
+          '"Helvetica Neue"',
+          'system-ui',
+          'sans-serif'
+        ],
       },
     },
   },
