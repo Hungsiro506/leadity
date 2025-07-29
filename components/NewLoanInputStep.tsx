@@ -59,7 +59,7 @@ export default function NewLoanInputStep({ data, onDataChange, onNext, onBack }:
   const validateForm = () => {
     const newErrors: FormErrors = {}
 
-    if (!data.collateralValue || parseNumberInput(data.collateralValue) <= 0) {
+    if (!data.collateralValue || data.collateralValue <= 0) {
       newErrors.collateralValue = 'Vui lòng nhập giá trị tài sản thế chấp'
     }
 
@@ -67,21 +67,21 @@ export default function NewLoanInputStep({ data, onDataChange, onNext, onBack }:
       newErrors.collateralType = 'Vui lòng chọn loại tài sản thế chấp'
     }
 
-    if (!data.loanAmount || parseNumberInput(data.loanAmount) <= 0) {
+    if (!data.loanAmount || data.loanAmount <= 0) {
       newErrors.loanAmount = 'Vui lòng nhập số tiền muốn vay'
-    } else if (data.collateralValue && parseNumberInput(data.loanAmount) > parseNumberInput(data.collateralValue) * 0.7) {
+    } else if (data.collateralValue && data.loanAmount > data.collateralValue * 0.7) {
       newErrors.loanAmount = 'Số tiền vay không được vượt quá 70% giá trị tài sản thế chấp'
     }
 
-    if (!data.desiredRate || parseNumberInput(data.desiredRate) <= 0) {
+    if (!data.desiredRate || data.desiredRate <= 0) {
       newErrors.desiredRate = 'Vui lòng nhập lãi suất mong muốn'
-    } else if (parseNumberInput(data.desiredRate) > 30) {
+    } else if (data.desiredRate > 30) {
       newErrors.desiredRate = 'Lãi suất không hợp lệ'
     }
 
-    if (!data.loanTerm || parseNumberInput(data.loanTerm) <= 0) {
+    if (!data.loanTerm || data.loanTerm <= 0) {
       newErrors.loanTerm = 'Vui lòng nhập kỳ hạn vay'
-    } else if (parseNumberInput(data.loanTerm) > 360) {
+    } else if (data.loanTerm > 360) {
       newErrors.loanTerm = 'Kỳ hạn vay không được vượt quá 360 tháng'
     }
 
@@ -175,7 +175,7 @@ export default function NewLoanInputStep({ data, onDataChange, onNext, onBack }:
           />
           {data.collateralValue && (
             <p className="text-sm text-gray-500 mt-1">
-              Tối đa: {formatNumberInput((parseNumberInput(data.collateralValue) * 0.7).toString())} VND (70% giá trị tài sản)
+              Tối đa: {formatNumberInput((data.collateralValue * 0.7).toString())} VND (70% giá trị tài sản)
             </p>
           )}
           {errors.loanAmount && (

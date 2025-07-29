@@ -65,31 +65,31 @@ export default function LoanInputStep({
     const newErrors: FormErrors = {}
 
     if (flowType === 'existing') {
-      if (!data.currentLoan || parseNumberInput(data.currentLoan) <= 0) {
+      if (!data.currentLoan || data.currentLoan <= 0) {
         newErrors.currentLoan = 'Vui lòng nhập dư nợ khoản vay hiện tại'
       }
     }
 
-    if (!data.newLoanAmount || parseNumberInput(data.newLoanAmount) <= 0) {
+    if (!data.newLoanAmount || data.newLoanAmount <= 0) {
       newErrors.newLoanAmount = 'Vui lòng nhập số tiền vay mới'
     }
 
-    if (!data.loanTerm || parseNumberInput(data.loanTerm) <= 0) {
+    if (!data.loanTerm || data.loanTerm <= 0) {
       newErrors.loanTerm = 'Vui lòng nhập kỳ hạn vay'
-    } else if (parseNumberInput(data.loanTerm) > 360) {
+    } else if (data.loanTerm > 360) {
       newErrors.loanTerm = 'Kỳ hạn vay không được vượt quá 360 tháng'
     }
 
-    if (!data.desiredRate || parseNumberInput(data.desiredRate) <= 0) {
+    if (!data.desiredRate || data.desiredRate <= 0) {
       newErrors.desiredRate = 'Vui lòng nhập lãi suất mong muốn'
-    } else if (parseNumberInput(data.desiredRate) > 30) {
+    } else if (data.desiredRate > 30) {
       newErrors.desiredRate = 'Lãi suất không hợp lệ'
     }
 
     // Validation for existing loan flow
     if (flowType === 'existing' && data.currentLoan && data.newLoanAmount) {
-      if (parseNumberInput(data.newLoanAmount) > parseNumberInput(data.currentLoan)) {
-        newErrors.newLoanAmount = `Khoản vay mới không được vượt quá ${formatVND(parseNumberInput(data.currentLoan))}`
+      if (data.newLoanAmount > data.currentLoan) {
+        newErrors.newLoanAmount = `Khoản vay mới không được vượt quá ${formatVND(data.currentLoan)}`
       }
     }
 
@@ -165,7 +165,7 @@ export default function LoanInputStep({
             Đơn vị: VND
             {flowType === 'existing' && data.currentLoan && (
               <span className="ml-2">
-                (Không được vượt quá {formatVND(parseNumberInput(data.currentLoan))})
+                (Không được vượt quá {formatVND(data.currentLoan)})
               </span>
             )}
           </p>
@@ -222,10 +222,10 @@ export default function LoanInputStep({
             <h4 className="font-medium text-blue-900 mb-2">Tóm tắt thông tin</h4>
             <div className="space-y-1 text-sm text-blue-800">
               {flowType === 'existing' && data.currentLoan && (
-                <p>Dư nợ hiện tại: <span className="font-medium">{formatVND(parseNumberInput(data.currentLoan))}</span></p>
+                <p>Dư nợ hiện tại: <span className="font-medium">{formatVND(data.currentLoan)}</span></p>
               )}
-              <p>Số tiền vay mới: <span className="font-medium">{formatVND(parseNumberInput(data.newLoanAmount))}</span></p>
-              <p>Kỳ hạn: <span className="font-medium">{data.loanTerm} tháng ({Math.round(parseNumberInput(data.loanTerm) / 12)} năm)</span></p>
+              <p>Số tiền vay mới: <span className="font-medium">{formatVND(data.newLoanAmount)}</span></p>
+              <p>Kỳ hạn: <span className="font-medium">{data.loanTerm} tháng ({Math.round(data.loanTerm / 12)} năm)</span></p>
               <p>Lãi suất mong muốn: <span className="font-medium">{data.desiredRate}%/năm</span></p>
             </div>
           </div>
