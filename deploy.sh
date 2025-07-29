@@ -95,8 +95,32 @@ generate_ssl_cert() {
 # Build the application
 build() {
     log_info "Building Leadity Banking application..."
-    docker-compose -f $COMPOSE_FILE build --no-cache
-    log_success "Build completed successfully"
+    
+    # Try building with cache first
+    if docker-compose -f $COMPOSE_FILE build; then
+        log_success "Build completed successfully"
+        return 0
+    fi
+    
+    log_warning "Build failed, trying with no-cache..."
+    
+    # Clean up Docker cache and try again
+    docker system prune -f
+    docker builder prune -f
+    
+    # Try building without cache
+    if docker-compose -f $COMPOSE_FILE build --no-cache; then
+        log_success "Build completed successfully (no-cache)"
+        return 0
+    fi
+    
+    log_error "Build failed even with no-cache. Checking for common issues..."
+    
+    # Check Docker disk space
+    docker system df
+    
+    log_error "Build failed. Please check Docker logs above for details."
+    exit 1
 }
 
 # Deploy the application

@@ -4,13 +4,20 @@ FROM node:18-alpine AS base
 # Install dependencies only when needed
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
+
 # Install all dependencies (including devDependencies) for build
-RUN npm ci
+# Use multiple strategies to handle npm issues
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retries 3 && \
+    npm ci --no-audit --prefer-offline --progress=false || \
+    (rm -rf node_modules package-lock.json && npm install --no-audit --progress=false)
 
 # Rebuild the source code only when needed
 FROM base AS builder

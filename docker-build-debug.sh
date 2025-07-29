@@ -1,92 +1,83 @@
 #!/bin/bash
 
-# Debug script for Docker build issues
-# This script helps identify build problems with verbose output
+# Docker Build Debug Script
+# Use this when normal builds fail
 
-echo "🔍 Docker Build Debug Script"
-echo "================================"
+set -e
 
-# Check Docker status
-echo "📊 Checking Docker status..."
-docker --version
-docker info | grep -E "(CPUs|Total Memory|Operating System)"
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-# Check available resources
-echo ""
-echo "💾 System Resources:"
-echo "Available disk space: $(df -h / | awk 'NR==2 {print $4}')"
-echo "Available memory: $(free -h | awk 'NR==2{print $7}')"
-echo "CPU cores: $(nproc)"
+log_info() {
+    echo -e "${BLUE}[DEBUG]${NC} $1"
+}
 
-# Check if we're in the right directory
-echo ""
-echo "📁 Current directory: $(pwd)"
-if [ ! -f "package.json" ]; then
-    echo "❌ package.json not found. Please run this from the leadity directory."
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+log_info "Starting Docker build debugging..."
+
+# Step 1: Show current Docker state
+log_info "Current Docker disk usage:"
+docker system df
+
+# Step 2: Clean everything
+log_warning "Cleaning all Docker data (containers, images, volumes, cache)..."
+docker-compose down --volumes --remove-orphans 2>/dev/null || true
+docker container prune -f
+docker image prune -af
+docker volume prune -f
+docker builder prune -af
+docker system prune -af
+
+log_success "Docker cleanup completed"
+
+# Step 3: Show package files
+log_info "Checking package files..."
+ls -la package*
+echo "Node.js version: $(node --version)"
+echo "NPM version: $(npm --version)"
+
+# Step 4: Test npm install locally
+log_info "Testing npm install locally..."
+if npm ci --silent; then
+    log_success "Local npm ci works"
+else
+    log_warning "Local npm ci failed, trying npm install..."
+    rm -rf node_modules package-lock.json
+    npm install --silent
+    log_success "Generated new package-lock.json"
+fi
+
+# Step 5: Build with verbose output
+log_info "Building Docker image with verbose output..."
+DOCKER_BUILDKIT=0 docker-compose build --progress=plain --no-cache
+
+if [ $? -eq 0 ]; then
+    log_success "Docker build successful!"
+    log_info "Starting containers..."
+    docker-compose up -d
+    
+    log_info "Checking container status:"
+    docker-compose ps
+    
+    log_info "Testing health endpoint:"
+    sleep 5
+    curl -f http://localhost/api/health || log_warning "Health endpoint not responding yet"
+else
+    log_error "Docker build still failing. Check the verbose output above."
     exit 1
-fi
-
-echo "✅ Found package.json"
-
-# Show package.json and dependencies
-echo ""
-echo "📦 Package info:"
-echo "Name: $(grep '"name"' package.json | cut -d'"' -f4)"
-echo "Version: $(grep '"version"' package.json | cut -d'"' -f4)"
-
-# Check if node_modules exists locally
-if [ -d "node_modules" ]; then
-    echo "📂 Local node_modules exists ($(du -sh node_modules | cut -f1))"
-else
-    echo "📂 No local node_modules"
-fi
-
-# Try to build Docker image with verbose output
-echo ""
-echo "🐳 Starting Docker build with detailed logging..."
-echo "This may take 5-10 minutes..."
-
-# Build with progress and detailed output
-docker build --progress=plain --no-cache -t leadity-banking-debug . 2>&1 | tee docker-build.log
-
-BUILD_RESULT=$?
-
-echo ""
-if [ $BUILD_RESULT -eq 0 ]; then
-    echo "✅ Docker build successful!"
-    echo "🚀 You can now run: docker run -p 3000:3000 leadity-banking-debug"
-else
-    echo "❌ Docker build failed!"
-    echo ""
-    echo "🔍 Analyzing build log..."
-    
-    # Check for common issues
-    if grep -q "npm ERR!" docker-build.log; then
-        echo "🔴 NPM errors found:"
-        grep "npm ERR!" docker-build.log | tail -5
-    fi
-    
-    if grep -q "Error:" docker-build.log; then
-        echo "🔴 Build errors found:"
-        grep "Error:" docker-build.log | tail -5
-    fi
-    
-    if grep -q "ENOSPC" docker-build.log; then
-        echo "🔴 Out of disk space!"
-        df -h
-    fi
-    
-    if grep -q "ENOMEM" docker-build.log; then
-        echo "🔴 Out of memory!"
-        free -h
-    fi
-    
-    echo ""
-    echo "📄 Full build log saved to: docker-build.log"
-    echo "📧 Share the last 50 lines for debugging:"
-    echo "tail -50 docker-build.log"
-fi
-
-echo ""
-echo "🧹 Cleanup completed images:"
-docker images | grep leadity 
+fi 
