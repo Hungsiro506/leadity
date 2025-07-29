@@ -12,6 +12,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Docker Compose command (V2)
+COMPOSE_CMD="docker compose"
+
 log_info() {
     echo -e "${BLUE}[DEBUG]${NC} $1"
 }
@@ -36,7 +39,7 @@ docker system df
 
 # Step 2: Clean everything
 log_warning "Cleaning all Docker data (containers, images, volumes, cache)..."
-docker-compose down --volumes --remove-orphans 2>/dev/null || true
+$COMPOSE_CMD down --volumes --remove-orphans 2>/dev/null || true
 docker container prune -f
 docker image prune -af
 docker volume prune -f
@@ -64,15 +67,15 @@ fi
 
 # Step 5: Build with verbose output
 log_info "Building Docker image with verbose output..."
-DOCKER_BUILDKIT=0 docker-compose build --progress=plain --no-cache
+DOCKER_BUILDKIT=0 $COMPOSE_CMD build --progress=plain --no-cache
 
 if [ $? -eq 0 ]; then
     log_success "Docker build successful!"
     log_info "Starting containers..."
-    docker-compose up -d
+    $COMPOSE_CMD up -d
     
     log_info "Checking container status:"
-    docker-compose ps
+    $COMPOSE_CMD ps
     
     log_info "Testing health endpoint:"
     sleep 5

@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 COMPOSE_FILE="docker-compose.yml"
+COMPOSE_CMD="docker compose"
 APP_NAME="leadity-banking"
 BACKUP_DIR="./backups"
 
@@ -97,7 +98,7 @@ build() {
     log_info "Building Leadity Banking application..."
     
     # Try building with cache first
-    if docker-compose -f $COMPOSE_FILE build; then
+    if $COMPOSE_CMD -f $COMPOSE_FILE build; then
         log_success "Build completed successfully"
         return 0
     fi
@@ -109,7 +110,7 @@ build() {
     docker builder prune -f
     
     # Try building without cache
-    if docker-compose -f $COMPOSE_FILE build --no-cache; then
+    if $COMPOSE_CMD -f $COMPOSE_FILE build --no-cache; then
         log_success "Build completed successfully (no-cache)"
         return 0
     fi
@@ -137,10 +138,10 @@ deploy() {
     fi
     
     # Stop existing containers
-    docker-compose -f $COMPOSE_FILE down
+    $COMPOSE_CMD -f $COMPOSE_FILE down
     
     # Start new containers
-    docker-compose -f $COMPOSE_FILE up -d
+    $COMPOSE_CMD -f $COMPOSE_FILE up -d
     
     # Wait for health check
     log_info "Waiting for application to be healthy..."
@@ -148,7 +149,7 @@ deploy() {
     local attempt=1
     
     while [[ $attempt -le $max_attempts ]]; do
-        if docker-compose -f $COMPOSE_FILE ps | grep -q "healthy"; then
+        if $COMPOSE_CMD -f $COMPOSE_FILE ps | grep -q "healthy"; then
             log_success "Application is healthy and running"
             return 0
         fi
@@ -160,23 +161,23 @@ deploy() {
     
     log_error "Application failed to become healthy within expected time"
     log_info "Checking logs..."
-    docker-compose -f $COMPOSE_FILE logs --tail=50
+    $COMPOSE_CMD -f $COMPOSE_FILE logs --tail=50
     exit 1
 }
 
 # Show application status
 status() {
     log_info "Checking application status..."
-    docker-compose -f $COMPOSE_FILE ps
+    $COMPOSE_CMD -f $COMPOSE_FILE ps
     
     log_info "Application logs (last 20 lines):"
-    docker-compose -f $COMPOSE_FILE logs --tail=20
+    $COMPOSE_CMD -f $COMPOSE_FILE logs --tail=20
 }
 
 # Stop the application
 stop() {
     log_info "Stopping Leadity Banking application..."
-    docker-compose -f $COMPOSE_FILE down
+    $COMPOSE_CMD -f $COMPOSE_FILE down
     log_success "Application stopped"
 }
 
@@ -191,9 +192,9 @@ restart() {
 logs() {
     local service=${1:-}
     if [[ -n "$service" ]]; then
-        docker-compose -f $COMPOSE_FILE logs -f "$service"
+        $COMPOSE_CMD -f $COMPOSE_FILE logs -f "$service"
     else
-        docker-compose -f $COMPOSE_FILE logs -f
+        $COMPOSE_CMD -f $COMPOSE_FILE logs -f
     fi
 }
 
@@ -297,7 +298,7 @@ main() {
             check_docker
             check_requirements
             log_info "Starting application..."
-            docker-compose -f $COMPOSE_FILE up -d
+            $COMPOSE_CMD -f $COMPOSE_FILE up -d
             ;;
         "stop")
             stop
