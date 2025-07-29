@@ -103,6 +103,15 @@ build() {
 deploy() {
     log_info "Deploying Leadity Banking application..."
     
+    # Choose the correct nginx configuration
+    if [[ -f ".env" ]] && grep -q "DOMAIN_NAME=cdp.leadity.ai" .env; then
+        log_info "Using production HTTPS configuration"
+        # Production config is already in default.conf
+    else
+        log_info "Using development HTTP configuration"
+        cp nginx/default.dev.conf nginx/default.conf
+    fi
+    
     # Stop existing containers
     docker-compose -f $COMPOSE_FILE down
     

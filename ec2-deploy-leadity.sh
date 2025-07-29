@@ -225,21 +225,8 @@ EOF
 configure_nginx() {
     log_info "Configuring Nginx for domain: $DOMAIN"
     
-    # Update nginx default.conf to use the domain
-    sed -i "s/server_name _;/server_name $DOMAIN;/g" nginx/default.conf
-    
-    # Add www redirect configuration
-    cat >> nginx/default.conf << 'EOF'
-
-# Redirect www to non-www
-server {
-    listen 443 ssl http2;
-    server_name www.cdp.leadity.ai;
-    ssl_certificate /etc/nginx/ssl/cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/key.pem;
-    return 301 https://cdp.leadity.ai$request_uri;
-}
-EOF
+    # The nginx/default.conf already includes proper HTTPS and www redirect configuration
+    # No additional configuration needed - SSL certificates will be handled by setup_ssl()
     
     log_success "Nginx configured for $DOMAIN"
 }
