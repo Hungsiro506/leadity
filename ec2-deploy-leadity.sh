@@ -49,14 +49,39 @@ check_user() {
 install_dependencies() {
     log_info "Updating system and installing dependencies..."
     
-    # Update system with conflict resolution
-    sudo yum update -y --allowerasing --skip-broken
+    # Detect package manager and update system with conflict resolution
+    if command -v dnf >/dev/null 2>&1; then
+        log_info "Using dnf package manager (Amazon Linux 2023)"
+        sudo dnf update -y --allowerasing --skip-broken
+        PKG_MGR="dnf"
+    else
+        log_info "Using yum package manager (Amazon Linux 2)"
+        sudo yum update -y --allowerasing --skip-broken
+        PKG_MGR="yum"
+    fi
     
     # Install basic dependencies
-    sudo yum install -y --allowerasing --skip-broken git curl
+    # Handle curl-minimal conflict on Amazon Linux 2023
+    if rpm -q curl-minimal >/dev/null 2>&1; then
+        log_info "Detected curl-minimal, replacing with full curl package..."
+        sudo $PKG_MGR swap -y curl-minimal curl
+    elif ! command -v curl >/dev/null 2>&1; then
+        sudo $PKG_MGR install -y --allowerasing --skip-broken curl
+    else
+        log_info "curl is already available"
+    fi
+    
+    # Install git if not present
+    if ! command -v git >/dev/null 2>&1; then
+        sudo $PKG_MGR install -y --allowerasing --skip-broken git
+    else
+        log_info "git is already installed"
+    fi
     
     # Install Docker with multiple fallback methods
-    if ! sudo yum install -y --allowerasing docker; then
+    if command -v docker >/dev/null 2>&1; then
+        log_info "Docker is already installed"
+    elif ! sudo $PKG_MGR install -y --allowerasing docker; then
         log_warning "Standard Docker installation failed, trying amazon-linux-extras..."
         if command -v amazon-linux-extras >/dev/null 2>&1; then
             sudo amazon-linux-extras install -y docker
@@ -92,6 +117,12 @@ install_dependencies() {
 # Install Certbot for SSL certificates
 install_certbot() {
     log_info "Installing Certbot for SSL certificates..."
+    
+    # Check if certbot is already installed
+    if command -v certbot >/dev/null 2>&1; then
+        log_info "Certbot is already installed"
+        return 0
+    fi
     
     # Try different methods for different Amazon Linux versions
     if command -v amazon-linux-extras >/dev/null 2>&1; then
