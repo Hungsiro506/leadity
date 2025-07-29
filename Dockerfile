@@ -20,9 +20,28 @@ COPY . .
 # Create environment file for build
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
+ENV NEXT_PUBLIC_POSTHOG_KEY ""
+ENV NEXT_PUBLIC_POSTHOG_HOST ""
 
-# Build the application
-RUN npm run build
+# Show environment for debugging
+RUN echo "Node version: $(node --version)" && \
+    echo "NPM version: $(npm --version)" && \
+    echo "Build environment: $NODE_ENV" && \
+    echo "Available memory: $(cat /proc/meminfo | grep MemAvailable)" && \
+    ls -la
+
+# Build the application with proper error handling
+RUN npm run build || (echo "=== BUILD FAILED ===" && \
+    echo "Checking for common issues..." && \
+    echo "=== Package.json ===" && \
+    cat package.json && \
+    echo "=== Next.config.js ===" && \
+    cat next.config.js && \
+    echo "=== Node modules ===" && \
+    ls -la node_modules/ | head -10 && \
+    echo "=== TypeScript config ===" && \
+    cat tsconfig.json && \
+    exit 1)
 
 # Production image, copy all the files and run next
 FROM base AS runner

@@ -315,13 +315,46 @@ deploy_application() {
     # Make deploy script executable
     chmod +x deploy.sh
     
-    # Apply docker group without logout (for current session)
-    newgrp docker << 'EOF'
-# Deploy the application
-./deploy.sh deploy
-EOF
+    # Try to build with better error handling
+    log_info "Building Docker image (this may take 5-10 minutes)..."
     
-    log_success "Application deployed successfully"
+    # Apply docker group without logout (for current session)
+    if newgrp docker << 'EOF'
+# Build and deploy the application
+if ./deploy.sh deploy; then
+    echo "Deployment successful"
+    exit 0
+else
+    echo "Deployment failed, checking Docker logs..."
+    docker logs leadity-banking-app 2>/dev/null || echo "No app logs available"
+    docker logs leadity-nginx 2>/dev/null || echo "No nginx logs available"
+    exit 1
+fi
+EOF
+    then
+        log_success "Application deployed successfully"
+    else
+        log_error "Deployment failed. Checking for common issues..."
+        
+        # Check Docker status
+        if ! docker ps >/dev/null 2>&1; then
+            log_error "Docker is not running or accessible"
+            return 1
+        fi
+        
+        # Check disk space
+        local available_space=$(df / | awk 'NR==2 {print $4}')
+        if [ "$available_space" -lt 2000000 ]; then
+            log_warning "Low disk space: ${available_space}KB available"
+        fi
+        
+        # Check memory
+        local available_memory=$(free -m | awk 'NR==2{printf "%.1f", $7/1024}')
+        log_info "Available memory: ${available_memory}GB"
+        
+        log_error "Deployment failed. Please check the error messages above."
+        return 1
+    fi
 }
 
 # Verify deployment

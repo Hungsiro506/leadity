@@ -5,18 +5,13 @@ const nextConfig = {
   
   // Optimize images for production
   images: {
-    unoptimized: true, // Disable Next.js image optimization for static export compatibility
+    unoptimized: true,
   },
   
   // Environment variables
   env: {
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-  },
-  
-  // Enable experimental features for better performance
-  experimental: {
-    optimizeCss: true,
   },
   
   // Configure headers for security
@@ -44,18 +39,6 @@ const nextConfig = {
         ],
       },
     ]
-  },
-  
-  // Webpack configuration for production optimization
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
-      // Reduce bundle size in production
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '@': __dirname,
-      }
-    }
-    return config
   },
 }
 
