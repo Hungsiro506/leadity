@@ -49,12 +49,29 @@ check_user() {
 install_dependencies() {
     log_info "Updating system and installing dependencies..."
     
-    sudo yum update -y
-    sudo yum install -y docker git curl
+    # Update system with conflict resolution
+    sudo yum update -y --allowerasing --skip-broken
+    
+    # Install basic dependencies
+    sudo yum install -y --allowerasing --skip-broken git curl
+    
+    # Install Docker with multiple fallback methods
+    if ! sudo yum install -y --allowerasing docker; then
+        log_warning "Standard Docker installation failed, trying amazon-linux-extras..."
+        if command -v amazon-linux-extras >/dev/null 2>&1; then
+            sudo amazon-linux-extras install -y docker
+        else
+            log_error "Failed to install Docker. Please install manually and re-run the script."
+            exit 1
+        fi
+    fi
     
     # Install Docker Compose
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
+    if ! command -v docker-compose >/dev/null 2>&1; then
+        log_info "Installing Docker Compose..."
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+    fi
     
     # Start and enable Docker
     sudo systemctl start docker
@@ -63,20 +80,43 @@ install_dependencies() {
     # Add user to docker group
     sudo usermod -aG docker $USER
     
-    log_success "Dependencies installed successfully"
+    # Verify installations
+    if command -v docker >/dev/null 2>&1 && command -v git >/dev/null 2>&1; then
+        log_success "Dependencies installed successfully"
+    else
+        log_error "Some dependencies failed to install. Please check manually."
+        exit 1
+    fi
 }
 
 # Install Certbot for SSL certificates
 install_certbot() {
     log_info "Installing Certbot for SSL certificates..."
     
-    # Install EPEL repository first (required for certbot on Amazon Linux)
-    sudo yum install -y amazon-linux-extras
-    sudo amazon-linux-extras enable epel
-    sudo yum install -y epel-release
-    sudo yum install -y certbot
+    # Try different methods for different Amazon Linux versions
+    if command -v amazon-linux-extras >/dev/null 2>&1; then
+        # Amazon Linux 2
+        log_info "Detected Amazon Linux 2, installing certbot via amazon-linux-extras..."
+        sudo amazon-linux-extras install -y epel
+        sudo yum install -y --allowerasing certbot
+    elif command -v dnf >/dev/null 2>&1; then
+        # Amazon Linux 2023
+        log_info "Detected Amazon Linux 2023, installing certbot via dnf..."
+        sudo dnf install -y --allowerasing certbot
+    else
+        # Fallback method
+        log_info "Using fallback method for certbot installation..."
+        sudo yum install -y --allowerasing epel-release
+        sudo yum install -y --allowerasing certbot
+    fi
     
-    log_success "Certbot installed successfully"
+    # Verify certbot installation
+    if command -v certbot >/dev/null 2>&1; then
+        log_success "Certbot installed successfully"
+    else
+        log_error "Failed to install certbot. Please install manually."
+        exit 1
+    fi
 }
 
 # Clone repository
