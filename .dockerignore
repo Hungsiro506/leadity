@@ -1,0 +1,91 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build output
+.next
+out
+
+# Production build
+dist
+build
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# Logs
+logs
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+
+# Development tools
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker files (avoid recursive Docker builds)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Testing
+coverage
+.nyc_output
+test-results
+junit.xml
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Cache directories
+.cache
+.parcel-cache
+.eslintcache
+
+# PostHog data generation scripts (not needed in production)
+generate-*.js
+sample_data/
+
+# Analytics and documentation (not needed in production)
+ANALYTICS_TRACKING.md
+TRACKING_SUMMARY.md
+POSTHOG_DASHBOARDS_SETUP.md
+BANKING_ANALYTICS_ENHANCEMENT.md 

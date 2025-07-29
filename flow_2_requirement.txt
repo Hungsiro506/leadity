@@ -1,0 +1,111 @@
+Requirements Document v2
+
+Flow 2: New Mortgage Loan Comparison Funnel
+
+Overview
+
+This flow supports new customers who want to compare mortgage loan packages from different banks. The user provides asset collateral information and desired loan terms, then receives offer options. Identity is confirmed through a basic OTP simulation, and user data is logged.
+
+⸻
+
+User Journey Breakdown
+
+Step 1: Input Loan and Collateral Information
+
+UI Fields:
+	•	Giá trị tài sản thế chấp (Collateral value in VND)
+Required. Currency input.
+	•	Loại tài sản thế chấp (Type of collateral asset)
+Required. Dropdown: e.g., Nhà ở, Căn hộ, Đất nền…
+	•	Số tiền muốn vay (Loan amount in VND)
+Required. Must be ≤ 70% of the collateral value.
+	•	Lãi suất mong muốn (Desired interest rate in %)
+Required. Number input.
+	•	Kỳ hạn mong muốn (Desired loan term in months)
+Required. Number input.
+	•	Ngân hàng tham khảo (Banks to compare)
+Required. Multi-select tag input.
+
+Tracking Event:
+new_loan_input is fired after submission.
+￼
+
+⸻
+
+Step 2: Capture Personal Information
+
+UI Fields:
+	•	Họ và tên (Full Name)
+	•	Năm sinh (Birth year)
+	•	Số điện thoại (Phone number)
+	•	Email
+	•	Thu nhập hàng tháng (Monthly income, in VND)
+	•	Hình thức nhận thu nhập (Income received via bank: yes/no)
+	•	Tỉnh/Thành phố (City)
+	•	Quận/Huyện (District)
+	•	Phường/Xã (Ward)
+	•	Ấp/Tên Đường (Street name)
+	•	Số nhà (House number)
+	•	Đồng ý với điều khoản (Terms checkbox)
+	•	Captcha
+
+Behavior:
+	•	OTP simulation (mock popup) confirms identity.
+	•	On verification, create user and fire PostHog identify event with:
+	•	name
+	•	birth_year
+	•	phone (PII)
+	•	email (PII)
+	•	monthly_income (number)
+	•	bank_income (boolean)
+	•	address_district
+	•	address_full
+
+￼
+
+⸻
+
+Step 3: Display Offer List
+
+Logic:
+	•	Use the selected banks from step 1 to display 1–4 loan offers.
+	•	Display fixed mock data (rates, terms, monthly payments, total repayment, etc.)
+
+Each Offer Card Includes:
+	•	Bank name (e.g., VIB)
+	•	Loan amount
+	•	Fixed rate
+	•	Floating rate (post fixed period)
+	•	Monthly payment (fixed/floating)
+	•	Total repayment
+	•	CTA buttons:
+	•	“Chọn” (Select)
+	•	“Tìm hiểu thêm” (Optional link)
+
+Note: If only one bank selected, adapt the layout for single-column display.
+
+￼
+
+⸻
+
+Step 4: Final Confirmation
+
+Behavior:
+	•	Clicking “Chọn” opens modal:
+“Chúc mừng Bạn đã đăng ký thành công
+Laisuattot đã nhận yêu cầu từ bạn. Chúng tôi sẽ liên hệ với bạn sớm nhất.”
+	•	CTA: “Trở về trang chủ”
+
+Tracking Event:
+loan_result_selected
+Also mark funnel as completed.
+￼
+
+⸻
+
+Notes on Implementation
+	•	Ensure validation: Loan amount ≤ 70% of asset value
+	•	Track all events: new_loan_input, loan_result_selected, and user identity via identify
+	•	Support 1–4 banks per result
+	•	Accept fake/mock OTP and result values for MVP
+	•	Currency is in VND, time unit is “Tháng” (months)

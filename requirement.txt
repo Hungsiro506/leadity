@@ -1,0 +1,127 @@
+Functional Requirements
+
+1. Anonymous Loan Interest Rate Comparison
+
+1.1 Two Entry Flows
+	•	Flow 1: Compare interest rates for an existing mortgage loan.
+	•	Flow 2: Compare rates for a new loan the user wants to take.
+
+1.2 User Inputs (Flow 1 and Flow 2)
+	•	Current Loan Outstanding (VND)
+	•	Required
+	•	Unit: VND
+	•	Description: Current outstanding amount of the loan.
+	•	New Loan Amount to Compare (VND)
+	•	Required
+	•	Unit: VND
+	•	Must not exceed the current loan value.
+	•	New Loan Term (Months)
+	•	Required
+	•	Unit: Months
+	•	Must not exceed the remaining term of the current loan.
+	•	Desired Interest Rate (%)
+	•	Required
+	•	Unit: Percent
+	•	Used as a baseline for comparing offers.
+
+⸻
+
+2. Early Payment Penalty Calculator
+
+Inputs:
+	•	Bank Name (dropdown)
+	•	Original Loan Amount (VND)
+	•	Original Loan Term (Months)
+	•	Original Loan Interest Rate (%)
+	•	Current Monthly Payment (VND)
+
+Output:
+	•	Early Repayment Penalty (default 2%)
+
+⸻
+
+3. Contact and Identity Collection
+
+After the calculation screen:
+	•	Trigger an OTP modal (demo only, no actual SMS backend)
+	•	Once OTP is “verified”, capture the following fields:
+
+Collected Fields:
+	•	Name
+	•	Year of birth
+	•	Phone number (PII)
+	•	Email (PII)
+	•	Monthly income (number)
+	•	Income received through bank or not (boolean)
+	•	Province/City
+	•	District
+	•	Ward
+	•	Full address
+
+Integration:
+	•	Send captured user data to PostHog as an identify event.
+
+⸻
+
+4. Offer Presentation and Final Flow
+
+Display a Comparison Table
+
+Use mock data with the following columns:
+	•	Bank Name (e.g., BIDV, VIB, VPBank)
+	•	Loan Amount
+	•	Term (months)
+	•	Initial interest rate
+	•	Fixed interest rate after period
+	•	Monthly payment with fixed rate
+	•	Total repayment (principal + interest)
+	•	Early repayment penalty
+	•	Savings before/after early repayment
+
+User Action:
+	•	Clickable “Chọn” (Select) button under each offer
+	•	On click:
+	•	Pop-up: “Congratzz! register success”
+	•	Return to the home page
+
+⸻
+
+UI Flow
+
+Step 1: Landing Page
+	•	Two buttons:
+	•	“So sánh khoản vay hiện tại với các gói vay khác” (Flow 1)
+	•	“Tôi muốn mua nhà mới” (Flow 2)
+
+Step 2: Input Form
+	•	Based on selected flow:
+	•	Inputs: Current loan, new loan, term, desired rate
+	•	Proceed to next step on “Tiếp tục”
+
+Step 3: Early Repayment Calculation
+	•	Inputs as specified
+	•	Displays early payment penalty
+
+Step 4: Contact Form & OTP
+	•	Full form with identity fields
+	•	Simulated OTP modal
+	•	On OTP input: submit and log identify event
+
+Step 5: Show Offers
+	•	Table of 3+ banks and offer terms
+	•	“Chọn” button under each offer
+
+Step 6: Confirmation
+	•	Pop-up: “Congratzz! register success”
+	•	Redirect to landing page
+
+⸻
+
+Non-Functional Requirements
+	•	Language support: Vietnamese (default), English (optional)
+	•	Responsive UI (desktop and mobile)
+	•	All currency values in VND
+	•	Percent values with % sign
+	•	Secure handling of PII
+	•	Fake data allowed for offer display and OTP
+	•	Easy to integrate backend APIs for real data later@
