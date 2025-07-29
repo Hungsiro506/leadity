@@ -51,18 +51,25 @@ log_success "Docker cleanup completed"
 # Step 3: Show package files
 log_info "Checking package files..."
 ls -la package*
-echo "Node.js version: $(node --version)"
-echo "NPM version: $(npm --version)"
 
-# Step 4: Test npm install locally
-log_info "Testing npm install locally..."
-if npm ci --silent; then
-    log_success "Local npm ci works"
+# Check if Node.js is available locally
+if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+    echo "Node.js version: $(node --version)"
+    echo "NPM version: $(npm --version)"
+    
+    # Step 4: Test npm install locally (only if Node.js is available)
+    log_info "Testing npm install locally..."
+    if npm ci --silent 2>/dev/null; then
+        log_success "Local npm ci works"
+    else
+        log_warning "Local npm ci failed, trying npm install..."
+        rm -rf node_modules package-lock.json
+        npm install --silent
+        log_success "Generated new package-lock.json"
+    fi
 else
-    log_warning "Local npm ci failed, trying npm install..."
-    rm -rf node_modules package-lock.json
-    npm install --silent
-    log_success "Generated new package-lock.json"
+    log_warning "Node.js/npm not installed locally - skipping local tests"
+    log_info "This is normal for production servers - Docker will handle npm"
 fi
 
 # Step 5: Build with verbose output

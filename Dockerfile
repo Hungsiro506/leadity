@@ -10,14 +10,16 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 
-# Install all dependencies (including devDependencies) for build
-# Use multiple strategies to handle npm issues
-RUN npm config set registry https://registry.npmjs.org/ && \
+# Clean npm cache and install dependencies with better error handling
+RUN npm cache clean --force && \
+    npm config set registry https://registry.npmjs.org/ && \
     npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm config set fetch-retries 3 && \
-    npm ci --no-audit --prefer-offline --progress=false || \
-    (rm -rf node_modules package-lock.json && npm install --no-audit --progress=false)
+    (npm ci --no-audit --prefer-offline --progress=false || \
+     (echo "npm ci failed, trying alternative installation..." && \
+      rm -rf node_modules package-lock.json && \
+      npm install --no-audit --progress=false --verbose))
 
 # Rebuild the source code only when needed
 FROM base AS builder
